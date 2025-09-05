@@ -1,0 +1,40 @@
+# Core Django
+Django>=4.2.0,<5.0.0
+djangorestframework>=3.14.0,<4.0.0
+djangorestframework-simplejwt>=5.2.0,<6.0.0
+django-cors-headers>=4.0.0,<5.0.0
+django-filter>=23.0,<24.0
+
+# Database
+psycopg2-binary>=2.9.0,<3.0.0
+redis>=4.5.0,<5.0.0
+
+# Environment & Configuration
+python-decouple>=3.8,<4.0.0
+
+# Monitoring & Metrics
+django-prometheus>=2.2.0,<3.0.0
+
+# Task Queue
+celery>=5.3.0,<6.0.0
+django-celery-beat>=2.5.0,<3.0.0
+django-celery-results>=2.5.0,<3.0.0
+
+# HTTP Requests
+requests>=2.31.0,<3.0.0
+
+# Development & Testing
+pytest>=7.4.0,<8.0.0
+pytest-django>=4.5.0,<5.0.0
+coverage>=7.2.0,<8.0.0
+black>=23.0,<24.0
+flake8>=6.0.0,<7.0.0
+
+# Production
+gunicorn>=21.0.0,<22.0.0
+whitenoise>=6.5.0,<7.0.0
+
+# Monitoring & Logging
+sentry-sdk>=1.28.0,<2.0.0
+
+
