@@ -1,0 +1,82 @@
+[
+  {
+    "model": "sagas.sagadefinition",
+    "pk": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+    "fields": {
+      "name": "Betting Flow Saga",
+      "saga_type": "betting_flow",
+      "description": "Saga for handling the complete betting process, including placing bet, debiting wallet, and confirming bet.",
+      "workflow_definition": {
+        "steps": [
+          {
+            "name": "Create Pending Bet",
+            "service": "betting_service",
+            "endpoint": "/api/v1/bets/create_pending/",
+            "method": "POST",
+            "request_template": {
+              "user_id": "${input.user_id}",
+              "bet_amount": "${input.bet_amount}",
+              "event_id": "${input.event_id}",
+              "odds": "${input.odds}",
+              "selection": "${input.selection}"
+            },
+            "compensation": {
+              "service": "betting_service",
+              "endpoint": "/api/v1/bets/cancel/",
+              "method": "POST",
+              "data": {
+                "bet_id": "${context.bet_id}"
+              }
+            }
+          },
+          {
+            "name": "Debit Wallet",
+            "service": "wallet_service",
+            "endpoint": "/api/v1/wallet/debit/",
+            "method": "POST",
+            "request_template": {
+              "user_id": "${input.user_id}",
+              "amount": "${input.bet_amount}",
+              "transaction_type": "bet_debit",
+              "reference_id": "${context.bet_id}"
+            },
+            "compensation": {
+              "service": "wallet_service",
+              "endpoint": "/api/v1/wallet/credit/",
+              "method": "POST",
+              "data": {
+                "user_id": "${input.user_id}",
+                "amount": "${input.bet_amount}",
+                "transaction_type": "bet_debit_compensation",
+                "reference_id": "${context.bet_id}"
+              }
+            }
+          },
+          {
+            "name": "Confirm Bet",
+            "service": "betting_service",
+            "endpoint": "/api/v1/bets/confirm/",
+            "method": "POST",
+            "request_template": {
+              "bet_id": "${context.bet_id}"
+            },
+            "compensation": {
+              "service": "betting_service",
+              "endpoint": "/api/v1/bets/cancel/",
+              "method": "POST",
+              "data": {
+                "bet_id": "${context.bet_id}"
+              }
+            }
+          }
+        ]
+      },
+      "timeout_seconds": 300,
+      "max_retries": 3,
+      "retry_delay_seconds": 5,
+      "is_active": true,
+      "version": "1.0"
+    }
+  }
+]
+

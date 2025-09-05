@@ -1,0 +1,140 @@
+[
+  {
+    "model": "sagas.sagadefinition",
+    "pk": "cashout_flow_001",
+    "fields": {
+      "name": "Cash Out Flow Saga",
+      "saga_type": "cashout_flow",
+      "description": "Saga for handling the complete Cash Out process, including validation, live odds fetch, quote calculation, wallet credit, liability update, and completion.",
+      "workflow_definition": {
+        "steps": [
+          {
+            "name": "cashout_validation",
+            "service": "betting_service",
+            "endpoint": "/api/cashout/check-eligibility/",
+            "method": "POST",
+            "request_template": {
+              "bet_slip_id": "${input.bet_slip_id}"
+            },
+            "compensation": {
+              "service": "betting_service",
+              "endpoint": "/api/cashout/validation/rollback/",
+              "method": "POST",
+              "data": {
+                "bet_slip_id": "${input.bet_slip_id}",
+                "reason": "Validation rollback"
+              }
+            }
+          },
+          {
+            "name": "live_odds_fetch",
+            "service": "risk_management_service",
+            "endpoint": "/api/cashout/live-odds/",
+            "method": "POST",
+            "request_template": {
+              "bet_slip_id": "${input.bet_slip_id}"
+            },
+            "compensation": {
+              "service": "risk_management_service",
+              "endpoint": "/api/cashout/live-odds/rollback/",
+              "method": "POST",
+              "data": {
+                "bet_slip_id": "${input.bet_slip_id}",
+                "reason": "Live odds fetch rollback"
+              }
+            }
+          },
+          {
+            "name": "cashout_quote",
+            "service": "betting_service",
+            "endpoint": "/api/cashout/request-quote/",
+            "method": "POST",
+            "request_template": {
+              "bet_slip_id": "${input.bet_slip_id}",
+              "bookmaker_type": "${input.bookmaker_type}",
+              "bookmaker_id": "${input.bookmaker_id}"
+            },
+            "compensation": {
+              "service": "betting_service",
+              "endpoint": "/api/cashout/quote/rollback/",
+              "method": "POST",
+              "data": {
+                "bet_slip_id": "${input.bet_slip_id}",
+                "reason": "Quote rollback"
+              }
+            }
+          },
+          {
+            "name": "wallet_credit",
+            "service": "wallet_service",
+            "endpoint": "/api/cashout/process/",
+            "method": "POST",
+            "request_template": {
+              "bet_slip_id": "${input.bet_slip_id}",
+              "user_id": "${input.user_id}",
+              "cashout_amount": "${context.cash_out_value}",
+              "saga_transaction_id": "${saga_id}"
+            },
+            "compensation": {
+              "service": "wallet_service",
+              "endpoint": "/api/cashout/rollback/",
+              "method": "POST",
+              "data": {
+                "bet_slip_id": "${input.bet_slip_id}",
+                "user_id": "${input.user_id}",
+                "saga_transaction_id": "${saga_id}",
+                "reason": "Wallet credit rollback"
+              }
+            }
+          },
+          {
+            "name": "liability_update",
+            "service": "risk_management_service",
+            "endpoint": "/api/cashout/liability/update/",
+            "method": "POST",
+            "request_template": {
+              "bet_slip_id": "${input.bet_slip_id}",
+              "cashout_amount": "${context.cash_out_value}",
+              "action": "PROCESS_CASHOUT"
+            },
+            "compensation": {
+              "service": "risk_management_service",
+              "endpoint": "/api/cashout/liability/rollback/",
+              "method": "POST",
+              "data": {
+                "bet_slip_id": "${input.bet_slip_id}",
+                "action": "ROLLBACK_CASHOUT",
+                "reason": "Liability update rollback"
+              }
+            }
+          },
+          {
+            "name": "cashout_completion",
+            "service": "betting_service",
+            "endpoint": "/api/cashout/complete/",
+            "method": "POST",
+            "request_template": {
+              "bet_slip_id": "${input.bet_slip_id}",
+              "cashout_history_id": "${context.cashout_history_id}",
+              "saga_transaction_id": "${saga_id}"
+            },
+            "compensation": {
+              "service": "betting_service",
+              "endpoint": "/api/cashout/cancel/",
+              "method": "POST",
+              "data": {
+                "bet_slip_id": "${input.bet_slip_id}",
+                "reason": "Cash Out completion rollback"
+              }
+            }
+          }
+        ]
+      },
+      "timeout_seconds": 180,
+      "max_retries": 3,
+      "retry_delay_seconds": 10,
+      "is_active": true,
+      "version": "1.0"
+    }
+  }
+]
