@@ -78,7 +78,7 @@ SPORT_BETTING_MODULE là một hệ thống cá cược thể thao được xây
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/dinhthe9212/SPORT_BETTING_MODULE.git
 cd SPORT_BETTING_MODULE
 
 # Copy environment file
@@ -500,8 +500,8 @@ Dự án này được phân phối dưới MIT License. Xem file [LICENSE](LICE
 
 - 📧 Email: support@sportbetting.com
 - 📱 Discord: [Join our server](https://discord.gg/sportbetting)
-- 📖 Documentation: [Wiki](https://github.com/your-repo/wiki)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-repo/issues)
+- 📖 Documentation: [Wiki](https://github.com/dinhthe9212/SPORT_BETTING_MODULE/wiki)
+- 🐛 Issues: [GitHub Issues](https://github.com/dinhthe9212/SPORT_BETTING_MODULE/issues)
 
 ## 🙏 Acknowledgments
 
