@@ -37,34 +37,40 @@ Mỗi service đều có file `.dockerignore` để loại bỏ:
 
 ## Các Service Đã Tối Ưu
 
-### 1. Betting Service
+### 1. Betting Service ✅
+- **Dockerfile**: Multi-stage build với Django runserver
 - **Dockerfile.production**: Multi-stage build với Gunicorn
 - **Port**: 8002
 - **Health Check**: `/health/` endpoint
 
-### 2. Risk Management Service
+### 2. Risk Management Service ✅
+- **Dockerfile**: Multi-stage build với Gunicorn
 - **Dockerfile.production**: Multi-stage build với Gunicorn
 - **Port**: 8003
 - **Health Check**: `/health/` endpoint
 
-### 3. Saga Orchestrator
+### 3. Saga Orchestrator ✅
+- **Dockerfile**: Multi-stage build với Django runserver
 - **Dockerfile.production**: Multi-stage build với Django runserver
-- **Port**: 8008
+- **Port**: 8009
 - **Health Check**: `/health/` endpoint
 - **Special**: Load initial saga definitions
 
-### 4. Sports Data Service
+### 4. Sports Data Service ✅
+- **Dockerfile**: Multi-stage build với Django runserver
 - **Dockerfile.production**: Multi-stage build với Django runserver
 - **Port**: 8005
 - **Health Check**: `/health/` endpoint
 
-### 5. Individual Bookmaker Service
+### 5. Individual Bookmaker Service ✅
+- **Dockerfile**: Multi-stage build với Django runserver
 - **Dockerfile.production**: Multi-stage build với Django runserver
 - **Port**: 8007
 - **Health Check**: `/health/` endpoint
 
-### 6. Carousel Service
-- **Dockerfile.production**: Đã có sẵn, được cập nhật
+### 6. Carousel Service ✅
+- **Dockerfile**: Multi-stage build với Django runserver
+- **Dockerfile.production**: Multi-stage build với Django runserver
 - **Port**: 8006
 - **Health Check**: `/health/` endpoint
 

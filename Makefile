@@ -26,6 +26,12 @@ help:
 	@echo "  make test-betting   - Run tests for betting service"
 	@echo "  make test-carousel  - Run tests for carousel service"
 	@echo ""
+	@echo "Code Quality:"
+	@echo "  make lint           - Run Flake8 linting"
+	@echo "  make format         - Format code with Black and isort"
+	@echo "  make format-check   - Check code formatting without changes"
+	@echo "  make lint-all       - Run all code quality checks"
+	@echo ""
 	@echo "Utilities:"
 	@echo "  make shell          - Open shell in betting service container"
 	@echo "  make collectstatic  - Collect static files for all services"
@@ -85,6 +91,29 @@ test:
 	docker-compose exec risk_management_service python manage.py test
 	docker-compose exec saga_orchestrator python manage.py test
 	docker-compose exec sports_data_service python manage.py test
+
+# Code Quality commands
+lint:
+	@echo "Running Flake8 linting..."
+	@flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+	@flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+format:
+	@echo "Running Black formatter..."
+	@black . --line-length=88
+	@echo "Running isort..."
+	@isort . --profile black
+
+format-check:
+	@echo "Checking code formatting..."
+	@black . --check --line-length=88
+	@isort . --check-only --profile black
+
+lint-all:
+	@echo "Running comprehensive code quality checks..."
+	@make format-check
+	@make lint
+	@echo "Code quality checks completed!"
 
 test-betting:
 	docker-compose exec betting_service python manage.py test

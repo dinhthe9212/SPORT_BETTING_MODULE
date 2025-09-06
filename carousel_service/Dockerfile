@@ -1,5 +1,6 @@
-# Carousel Service Dockerfile
-FROM python:3.11-slim
+# Multi-stage build for Carousel Service
+# Stage 1: Build stage
+FROM python:3.11-slim as builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -9,25 +10,53 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies for building
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        postgresql-client \
         build-essential \
         libpq-dev \
+        gcc \
+        python3-dev \
         curl \
         git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Copy requirements and install Python dependencies
 COPY carousel_service/requirements.production.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Stage 2: Production stage
+FROM python:3.11-slim as production
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH="/root/.local/bin:$PATH"
+
+# Set work directory
+WORKDIR /app
+
+# Install only runtime dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        postgresql-client \
+        libpq5 \
+        curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy Python packages from builder stage
+COPY --from=builder /root/.local /root/.local
 
 # Copy shared module first
 COPY shared /app/shared
 
-# Copy project
-COPY carousel_service/ /app/
+# Copy only necessary application files
+COPY carousel_service/carousel_service_project/ /app/carousel_service_project/
+COPY carousel_service/carousel/ /app/carousel/
+COPY carousel_service/manage.py /app/
+COPY carousel_service/requirements.production.txt /app/requirements.txt
 
 # Create logs directory
 RUN mkdir -p /app/logs

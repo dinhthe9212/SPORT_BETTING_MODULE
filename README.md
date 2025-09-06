@@ -13,6 +13,7 @@
 - [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
 - [Cài đặt](#cài-đặt)
 - [Sử dụng](#sử-dụng)
+- [Code Quality](#code-quality)
 - [API Documentation](#api-documentation)
 - [Tích hợp](#tích-hợp)
 - [Deployment](#deployment)
@@ -115,6 +116,37 @@ python manage.py migrate
 # Khởi động service
 python manage.py runserver 8002
 ```
+
+## 🎮 Sử dụng
+
+### Code Quality
+
+Dự án đã được tích hợp các công cụ code quality để đảm bảo mã nguồn nhất quán và chất lượng cao:
+
+#### Lệnh Makefile
+```bash
+# Chạy tất cả kiểm tra code quality
+make lint-all
+
+# Chỉ chạy linting (Flake8)
+make lint
+
+# Format code với Black và isort
+make format
+
+# Kiểm tra formatting mà không thay đổi code
+make format-check
+```
+
+#### Công cụ được sử dụng
+- **Black**: Code formatter (line length = 88)
+- **Flake8**: Linter với cấu hình tùy chỉnh
+- **isort**: Import sorter tương thích với Black
+
+#### Cấu hình
+- File cấu hình: `pyproject.toml`, `.flake8`
+- Requirements: `requirements-dev.txt`
+- Hướng dẫn chi tiết: [CODE_QUALITY_GUIDE.md](CODE_QUALITY_GUIDE.md)
 
 ## 🎮 Sử dụng
 
