@@ -73,5 +73,5 @@ EXPOSE 8005
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8005/health/ || exit 1
 
-# Default command
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8005"]
+# Default command (Production ready with Gunicorn)
+CMD ["gunicorn", "sports_data_service_project.wsgi:application", "--bind", "0.0.0.0:8005", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]

@@ -28,3 +28,6 @@ whitenoise>=6.5.0,<7.0.0
 
 # Monitoring và Logging
 sentry-sdk>=1.28.0,<2.0.0
+
+# API Documentation
+drf-spectacular>=0.26.0,<1.0.0

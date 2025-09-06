@@ -15,6 +15,7 @@ SERVICE_VERSION = '1.0.0'
 # Application definition
 INSTALLED_APPS += [
     'sagas',
+    'drf_spectacular',
 ]
 
 ROOT_URLCONF = 'saga_orchestrator_project.urls'
@@ -68,4 +69,31 @@ LOGGING['loggers']['sagas'] = {
 
 # Add service name to log formatters
 LOGGING['formatters']['json']['format'] = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "service": "saga_orchestrator", "module": "%(module)s", "message": "%(message)s"}'
+
+# API Documentation Settings
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Saga Orchestrator API',
+    'DESCRIPTION': 'API documentation for the Saga Orchestrator microservice. This service coordinates distributed transactions and ensures data consistency across the betting system.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/',
+    'TAGS': [
+        {'name': 'Saga Management', 'description': 'Saga creation, execution, and management endpoints'},
+        {'name': 'Transaction Coordination', 'description': 'Distributed transaction coordination'},
+        {'name': 'Compensation', 'description': 'Compensation and rollback operations'},
+        {'name': 'Health Check', 'description': 'Service health and status endpoints'},
+    ],
+}
 

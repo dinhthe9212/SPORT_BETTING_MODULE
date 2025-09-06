@@ -120,31 +120,81 @@ LOG_LEVEL=INFO
 
 ## API Endpoints
 
-### Dashboard
-- `GET /api/dashboard/` - Lấy dữ liệu dashboard
-- `GET /api/risk-overview/` - Tổng quan rủi ro
-- `GET /api/performance/` - Dữ liệu hiệu suất
+### API Documentation
+- **Swagger UI**: `http://localhost:8007/api/docs/` - Interactive API documentation
+- **ReDoc**: `http://localhost:8007/api/redoc/` - Alternative API documentation  
+- **OpenAPI Schema**: `http://localhost:8007/api/schema/` - Raw OpenAPI schema
 
-### Education
-- `GET /api/education/` - Danh sách tutorials
-- `POST /api/education/complete/` - Đánh dấu hoàn thành
+### Dashboard & Overview Endpoints
+- `GET /api/dashboard/` - Dashboard chính cho Individual Bookmaker (yêu cầu authentication)
+- `GET /api/risk-overview/` - Tổng quan về rủi ro và phân tích risk profile
+- `GET /api/performance/` - Dữ liệu hiệu suất và thống kê chi tiết
 
-### Alerts
-- `GET /api/alerts/` - Danh sách cảnh báo
-- `POST /api/alerts/mark-read/` - Đánh dấu đã đọc
+### Education System Endpoints
+- `GET /api/education/` - Danh sách tutorials và khóa học giáo dục rủi ro
+- `POST /api/education/complete/` - Đánh dấu hoàn thành tutorial và cập nhật tiến độ
+- `GET /api/tutorials/` - Quản lý tutorials (CRUD operations)
+- `GET /api/tutorials/{id}/` - Chi tiết tutorial cụ thể
+- `POST /api/tutorials/` - Tạo tutorial mới (admin only)
+- `PUT /api/tutorials/{id}/` - Cập nhật tutorial (admin only)
+- `DELETE /api/tutorials/{id}/` - Xóa tutorial (admin only)
 
-### Best Practices
-- `GET /api/best-practices/` - Danh sách best practices
+### Risk Alerts Management Endpoints
+- `GET /api/alerts/` - Danh sách cảnh báo rủi ro thời gian thực
+- `POST /api/alerts/mark-read/` - Đánh dấu cảnh báo đã đọc
+- `GET /api/alerts/{id}/` - Chi tiết cảnh báo cụ thể
+- `POST /api/alerts/` - Tạo cảnh báo mới (admin only)
+- `PUT /api/alerts/{id}/` - Cập nhật cảnh báo (admin only)
+- `DELETE /api/alerts/{id}/` - Xóa cảnh báo (admin only)
 
-### CRUD Operations
-- `GET/POST/PUT/DELETE /api/bookmakers/` - Quản lý bookmaker
-- `GET/POST/PUT/DELETE /api/tutorials/` - Quản lý tutorials
-- `GET/POST/PUT/DELETE /api/alerts/` - Quản lý alerts
-- `GET/POST/PUT/DELETE /api/performance/` - Quản lý performance
+### Best Practices & Guidelines Endpoints
+- `GET /api/best-practices/` - Danh sách best practices và hướng dẫn
+- `GET /api/best-practices/{id}/` - Chi tiết best practice cụ thể
+- `POST /api/best-practices/` - Tạo best practice mới (admin only)
+- `PUT /api/best-practices/{id}/` - Cập nhật best practice (admin only)
+- `DELETE /api/best-practices/{id}/` - Xóa best practice (admin only)
 
-### Health & Integration
-- `GET /api/health/` - Health check
-- `POST /api/webhook/risk-update/` - Webhook cập nhật rủi ro
+### Individual Bookmaker Management Endpoints
+- `GET /api/bookmakers/` - Danh sách bookmaker profiles
+- `POST /api/bookmakers/` - Tạo profile bookmaker mới
+- `GET /api/bookmakers/{id}/` - Chi tiết profile bookmaker
+- `PUT /api/bookmakers/{id}/` - Cập nhật profile bookmaker
+- `DELETE /api/bookmakers/{id}/` - Xóa profile bookmaker
+- `PATCH /api/bookmakers/{id}/` - Cập nhật một phần profile
+
+### Performance Analytics Endpoints
+- `GET /api/performance/` - Dữ liệu hiệu suất tổng quan
+- `GET /api/performance/{id}/` - Chi tiết hiệu suất bookmaker cụ thể
+- `POST /api/performance/` - Tạo bản ghi hiệu suất mới
+- `PUT /api/performance/{id}/` - Cập nhật dữ liệu hiệu suất
+- `DELETE /api/performance/{id}/` - Xóa bản ghi hiệu suất
+
+### Health Check & Integration Endpoints
+- `GET /api/health/` - Health check cơ bản
+- `GET /health/` - Health check endpoint chính
+- `POST /api/webhook/risk-update/` - Webhook nhận cập nhật rủi ro từ external services
+
+### Query Parameters & Filtering
+#### Bookmaker Endpoints
+- `user_id` (integer): Lọc theo user ID
+- `status` (string): Lọc theo trạng thái (ACTIVE, SUSPENDED, INACTIVE, PENDING_VERIFICATION)
+- `risk_level` (string): Lọc theo mức độ rủi ro
+- `experience_level` (string): Lọc theo cấp độ kinh nghiệm (BEGINNER, INTERMEDIATE, ADVANCED, EXPERT)
+
+#### Tutorial Endpoints
+- `difficulty_level` (string): Lọc theo độ khó
+- `category` (string): Lọc theo danh mục
+- `is_completed` (boolean): Lọc theo trạng thái hoàn thành
+
+#### Alert Endpoints
+- `alert_type` (string): Lọc theo loại cảnh báo
+- `severity` (string): Lọc theo mức độ nghiêm trọng
+- `is_read` (boolean): Lọc theo trạng thái đã đọc
+
+#### Performance Endpoints
+- `date_from` (date): Lọc từ ngày
+- `date_to` (date): Lọc đến ngày
+- `metric_type` (string): Lọc theo loại metric
 
 ## Cấu trúc dự án
 

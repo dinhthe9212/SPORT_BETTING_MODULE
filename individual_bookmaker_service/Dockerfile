@@ -44,5 +44,5 @@ EXPOSE 8007
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8007/health/ || exit 1
 
-# Default command
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8007"]
+# Default command (Production ready with Gunicorn)
+CMD ["gunicorn", "individual_bookmaker_service.wsgi:application", "--bind", "0.0.0.0:8007", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]

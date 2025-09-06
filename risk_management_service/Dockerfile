@@ -25,7 +25,7 @@ COPY risk_management_service/ /app/
 RUN mkdir -p logs
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8003
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "risk_management_service_project.wsgi:application"]
+CMD ["gunicorn", "risk_management_service_project.wsgi:application", "--bind", "0.0.0.0:8003", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]

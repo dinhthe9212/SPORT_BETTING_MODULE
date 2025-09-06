@@ -19,6 +19,7 @@ SERVICE_VERSION = '1.0.0'
 # Application definition
 INSTALLED_APPS += [
     'individual_bookmaker',
+    'drf_spectacular',  # API Documentation
 ]
 
 ROOT_URLCONF = 'individual_bookmaker_service.urls'
@@ -72,3 +73,28 @@ INTERNAL_API_KEYS = [
 # Rate Limiting Settings
 RATE_LIMIT_MAX_REQUESTS = config('RATE_LIMIT_MAX_REQUESTS', default=100, cast=int)
 RATE_LIMIT_WINDOW = config('RATE_LIMIT_WINDOW', default=60, cast=int)
+
+# API Documentation Settings
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Individual Bookmaker Service API',
+    'DESCRIPTION': 'API documentation for the Individual Bookmaker Service microservice. This service provides dashboard and risk management tools for individual bookmakers, including education system, real-time alerts, and performance analytics.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/',
+    'TAGS': [
+        {'name': 'Dashboard', 'description': 'Dashboard and overview endpoints'},
+        {'name': 'Education', 'description': 'Risk education system and tutorials'},
+        {'name': 'Alerts', 'description': 'Risk alerts and notifications management'},
+        {'name': 'Best Practices', 'description': 'Best practices and guidelines'},
+        {'name': 'Bookmakers', 'description': 'Individual bookmaker profile management'},
+        {'name': 'Performance', 'description': 'Performance analytics and metrics'},
+        {'name': 'Health', 'description': 'Health check and integration endpoints'},
+    ],
+}

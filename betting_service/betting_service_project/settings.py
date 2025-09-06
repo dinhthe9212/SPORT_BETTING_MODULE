@@ -16,6 +16,7 @@ SERVICE_VERSION = '1.0.0'
 INSTALLED_APPS += [
     'betting.apps.BettingConfig',
     'django_prometheus',
+    'drf_spectacular',
 ]
 
 # Database configuration for Betting Service
@@ -87,5 +88,37 @@ AUTO_ORDER_TIMEOUT = config('AUTO_ORDER_TIMEOUT', default=300, cast=int)  # 5 mi
 CASHOUT_ENABLED = config('CASHOUT_ENABLED', default=True, cast=bool)
 CASHOUT_MIN_AMOUNT = config('CASHOUT_MIN_AMOUNT', default=10, cast=float)
 CASHOUT_MAX_AMOUNT = config('CASHOUT_MAX_AMOUNT', default=5000, cast=float)
+
+# API Documentation Settings
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Betting Service API',
+    'DESCRIPTION': 'API documentation for the Betting Service microservice. This service handles all P2P betting activities including odds management, bet placement, cash out, P2P marketplace, and fractional ownership.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/betting/',
+    'TAGS': [
+        {'name': 'Sports', 'description': 'Sports management endpoints'},
+        {'name': 'Teams', 'description': 'Teams management endpoints'},
+        {'name': 'Matches', 'description': 'Matches management endpoints'},
+        {'name': 'Bet Types', 'description': 'Bet types management endpoints'},
+        {'name': 'Odds', 'description': 'Odds management and analytics endpoints'},
+        {'name': 'Bet Slips', 'description': 'Bet slips management endpoints'},
+        {'name': 'Bet Selections', 'description': 'Bet selections management endpoints'},
+        {'name': 'Bet Slip Purchases', 'description': 'Bet slip purchases management endpoints'},
+        {'name': 'Cash Out', 'description': 'Cash out operations and configuration'},
+        {'name': 'P2P Marketplace', 'description': 'P2P marketplace and fractional ownership'},
+        {'name': 'Auto Orders', 'description': 'Automatic order management (Take Profit & Stop Loss)'},
+        {'name': 'Market Suspension', 'description': 'Market suspension management'},
+        {'name': 'Statistics', 'description': 'Statistics and leaderboard endpoints'},
+        {'name': 'Responsible Gaming', 'description': 'Responsible gaming policies and activity logs'},
+    ],
+}
 
 

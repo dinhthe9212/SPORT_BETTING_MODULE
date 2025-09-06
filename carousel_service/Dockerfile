@@ -73,5 +73,5 @@ EXPOSE 8006
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8006/health/ || exit 1
 
-# Default command
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8006"]
+# Default command (Production ready with Gunicorn)
+CMD ["gunicorn", "carousel_service_project.wsgi:application", "--bind", "0.0.0.0:8006", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]

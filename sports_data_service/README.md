@@ -2,6 +2,11 @@
 
 Module Dữ Liệu Thể Thao (Sports Data Service) - Microservice độc lập cung cấp dữ liệu thể thao cho toàn bộ hệ thống.
 
+## 📚 **API Documentation**
+- **Swagger UI**: `http://localhost:8005/api/docs/` - Interactive API documentation
+- **ReDoc**: `http://localhost:8005/api/redoc/` - Alternative API documentation  
+- **OpenAPI Schema**: `http://localhost:8005/api/schema/` - Raw OpenAPI schema
+
 ## 🚀 **TÍNH NĂNG CHÍNH**
 
 ### **Core Features (100% Complete)**

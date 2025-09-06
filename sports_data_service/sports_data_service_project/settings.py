@@ -14,6 +14,9 @@ SERVICE_VERSION = '1.0.0'
 
 INSTALLED_APPS += [
     'sports_data',
+    'drf_spectacular',
+    'django_celery_beat',
+    'django_celery_results',
 ]
 
 # Database configuration for Sports Data Service
@@ -102,3 +105,42 @@ INTERNAL_API_KEYS = [
 # Rate Limiting Settings
 RATE_LIMIT_MAX_REQUESTS = config('RATE_LIMIT_MAX_REQUESTS', default=100, cast=int)
 RATE_LIMIT_WINDOW = config('RATE_LIMIT_WINDOW', default=60, cast=int)
+
+# API Documentation Settings
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Sports Data Service API',
+    'DESCRIPTION': 'API documentation for the Sports Data Service microservice. This service provides comprehensive sports data from multiple providers with real-time synchronization, data validation, and advanced monitoring.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/',
+    'TAGS': [
+        {'name': 'Live Scores', 'description': 'Real-time live scores and match data'},
+        {'name': 'Fixtures', 'description': 'Match fixtures and scheduling'},
+        {'name': 'Odds Data', 'description': 'Betting odds from multiple providers'},
+        {'name': 'Data Synchronization', 'description': 'Data sync and validation endpoints'},
+        {'name': 'Provider Management', 'description': 'External API provider management'},
+        {'name': 'Health Check', 'description': 'Service health and status endpoints'},
+    ],
+}
+
+# Celery Configuration for Cron Jobs
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_TIMEZONE = 'UTC'
+CELERY_ENABLE_UTC = True
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+CELERY_CACHE_BACKEND = 'django-cache'

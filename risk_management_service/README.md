@@ -6,6 +6,11 @@ Risk Management Service là service chịu trách nhiệm quản lý và giám s
 
 **🎯 TRẠNG THÁI: HOÀN THÀNH 100% - PRODUCTION READY**
 
+## 📚 **API Documentation**
+- **Swagger UI**: `http://localhost:8003/api/docs/` - Interactive API documentation
+- **ReDoc**: `http://localhost:8003/api/redoc/` - Alternative API documentation  
+- **OpenAPI Schema**: `http://localhost:8003/api/schema/` - Raw OpenAPI schema
+
 ## 🏆 **Betting System - 50+ Sports & 50+ Bet Types**
 
 ### **Hỗ Trợ Đầy Đủ Cho Betting System**

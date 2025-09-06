@@ -69,12 +69,12 @@ RUN adduser --disabled-password --gecos '' appuser \
 USER appuser
 
 # Expose port
-EXPOSE 8009
+EXPOSE 8008
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8009/health/ || exit 1
+    CMD curl -f http://localhost:8008/health/ || exit 1
 
 # Run the application
-CMD python manage.py migrate && python manage.py loaddata sagas/fixtures/initial_saga_definitions.json && python manage.py runserver 0.0.0.0:8009
+CMD python manage.py migrate && python manage.py loaddata sagas/fixtures/initial_saga_definitions.json && gunicorn saga_orchestrator_project.wsgi:application --bind 0.0.0.0:8008 --workers 4 --worker-class sync --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100
 

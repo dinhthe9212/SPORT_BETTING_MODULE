@@ -71,47 +71,10 @@ services:
       timeout: 10s
       retries: 3
 
-  # Migration Service (chạy trước tất cả services)
-  migration_service:
-    build:
-      context: .
-      dockerfile: migration_service/Dockerfile
-    container_name: sport_betting_migration_service
-    environment:
-      - DB_NAME=${BETTING_DB_NAME}
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - DB_HOST=${POSTGRES_HOST}
-      - DB_PORT=${POSTGRES_PORT}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_DB=${REDIS_DB_BETTING}
-      - BETTING_DB_NAME=${BETTING_DB_NAME}
-      - CAROUSEL_DB_NAME=${CAROUSEL_DB_NAME}
-      - INDIVIDUAL_BOOKMAKER_DB_NAME=${INDIVIDUAL_BOOKMAKER_DB_NAME}
-      - RISK_MANAGEMENT_DB_NAME=${RISK_MANAGEMENT_DB_NAME}
-      - SAGA_DB_NAME=${SAGA_DB_NAME}
-      - SPORTS_DATA_DB_NAME=${SPORTS_DATA_DB_NAME}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - sport_betting_network
-    volumes:
-      - ./shared:/app/shared
-      - ./betting_service:/app/betting_service
-      - ./carousel_service:/app/carousel_service
-      - ./individual_bookmaker_service:/app/individual_bookmaker_service
-      - ./risk_management_service:/app/risk_management_service
-      - ./saga_orchestrator:/app/saga_orchestrator
-      - ./sports_data_service:/app/sports_data_service
-    restart: "no"
 
   # Betting Service
   betting_service:
-    image: test-betting-service:latest
+    image: test-betting-service:v1.0.0
     container_name: sport_betting_betting_service
     ports:
       - "8002:8002"
@@ -146,8 +109,6 @@ services:
       - CASHOUT_MIN_AMOUNT=${CASHOUT_MIN_AMOUNT}
       - CASHOUT_MAX_AMOUNT=${CASHOUT_MAX_AMOUNT}
     depends_on:
-      migration_service:
-        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -159,11 +120,11 @@ services:
       - ./betting_service:/app
       - ./scripts/entrypoint.sh:/app/entrypoint.sh
     entrypoint: ["/app/entrypoint.sh"]
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8002"]
+    command: ["gunicorn", "betting_service_project.wsgi:application", "--bind", "0.0.0.0:8002", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]
 
   # Carousel Service
   carousel_service:
-    image: test-carousel-service:latest
+    image: test-carousel-service:v1.0.0
     container_name: sport_betting_carousel_service
     ports:
       - "8006:8006"
@@ -185,8 +146,6 @@ services:
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS}
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW}
     depends_on:
-      migration_service:
-        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -198,11 +157,11 @@ services:
       - ./carousel_service:/app
       - ./scripts/entrypoint.sh:/app/entrypoint.sh
     entrypoint: ["/app/entrypoint.sh"]
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8006"]
+    command: ["gunicorn", "carousel_service_project.wsgi:application", "--bind", "0.0.0.0:8006", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]
 
   # Individual Bookmaker Service
   individual_bookmaker_service:
-    image: individual-bookmaker-service:latest
+    image: individual-bookmaker-service:v1.0.0
     container_name: sport_betting_individual_bookmaker_service
     ports:
       - "8007:8007"
@@ -227,8 +186,6 @@ services:
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS}
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW}
     depends_on:
-      migration_service:
-        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -240,11 +197,11 @@ services:
       - ./individual_bookmaker_service:/app
       - ./scripts/entrypoint.sh:/app/entrypoint.sh
     entrypoint: ["/app/entrypoint.sh"]
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8007"]
+    command: ["gunicorn", "individual_bookmaker_service.wsgi:application", "--bind", "0.0.0.0:8007", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]
 
   # Risk Management Service
   risk_management_service:
-    image: risk-management-service:latest
+    image: risk-management-service:v1.0.0
     container_name: sport_betting_risk_management_service
     ports:
       - "8003:8003"
@@ -268,8 +225,6 @@ services:
       - CIRCUIT_BREAKER_FAILURE_THRESHOLD=${CIRCUIT_BREAKER_FAILURE_THRESHOLD}
       - CIRCUIT_BREAKER_RECOVERY_TIMEOUT=${CIRCUIT_BREAKER_RECOVERY_TIMEOUT}
     depends_on:
-      migration_service:
-        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -281,11 +236,11 @@ services:
       - ./risk_management_service:/app
       - ./scripts/entrypoint.sh:/app/entrypoint.sh
     entrypoint: ["/app/entrypoint.sh"]
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8003"]
+    command: ["gunicorn", "risk_management_service_project.wsgi:application", "--bind", "0.0.0.0:8003", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]
 
   # Saga Orchestrator
   saga_orchestrator:
-    image: saga-orchestrator:latest
+    image: saga-orchestrator:v1.0.0
     container_name: sport_betting_saga_orchestrator
     ports:
       - "8008:8008"
@@ -308,8 +263,6 @@ services:
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS}
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW}
     depends_on:
-      migration_service:
-        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -323,11 +276,11 @@ services:
       - ./saga_orchestrator:/app
       - ./scripts/entrypoint.sh:/app/entrypoint.sh
     entrypoint: ["/app/entrypoint.sh"]
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8008"]
+    command: ["gunicorn", "saga_orchestrator_project.wsgi:application", "--bind", "0.0.0.0:8008", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]
 
   # Sports Data Service
   sports_data_service:
-    image: sports-data-service:latest
+    image: sports-data-service:v1.0.0
     container_name: sport_betting_sports_data_service
     ports:
       - "8005:8005"
@@ -372,8 +325,6 @@ services:
       - ALERT_PROVIDER_DOWN_COOLDOWN=${ALERT_PROVIDER_DOWN_COOLDOWN}
       - ALERT_PROVIDER_DOWN_MAX_PER_HOUR=${ALERT_PROVIDER_DOWN_MAX_PER_HOUR}
     depends_on:
-      migration_service:
-        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -385,7 +336,7 @@ services:
       - ./sports_data_service:/app
       - ./scripts/entrypoint.sh:/app/entrypoint.sh
     entrypoint: ["/app/entrypoint.sh"]
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8005"]
+    command: ["gunicorn", "sports_data_service_project.wsgi:application", "--bind", "0.0.0.0:8005", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100"]
 
   # Nginx Reverse Proxy
   nginx:

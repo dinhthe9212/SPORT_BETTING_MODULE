@@ -4,6 +4,11 @@
 
 Saga Orchestrator is a microservice responsible for coordinating distributed transactions and ensuring data consistency.
 
+## 📚 **API Documentation**
+- **Swagger UI**: `http://localhost:8008/api/docs/` - Interactive API documentation
+- **ReDoc**: `http://localhost:8008/api/redoc/` - Alternative API documentation  
+- **OpenAPI Schema**: `http://localhost:8008/api/schema/` - Raw OpenAPI schema
+
 ## Main Features
 
 - **Core Functionality**: Core functionality of the service
