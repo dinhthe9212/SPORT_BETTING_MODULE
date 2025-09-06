@@ -175,7 +175,8 @@ class DynamicOddsService:
     """Service quản lý odds động dựa trên risk/liability"""
     
     def __init__(self):
-        self.risk_service_url = getattr(settings, 'RISK_SERVICE_URL', 'http://risk-management-service:8000')
+        from shared.base_settings import get_service_url
+        self.risk_service_url = get_service_url('risk')
         self.odds_update_threshold = getattr(settings, 'ODDS_UPDATE_THRESHOLD', Decimal('0.01'))
     
     def calculate_risk_based_odds(self, odd: Odd, current_liability: Decimal) -> Optional[Decimal]:
@@ -237,10 +238,11 @@ class CashOutService:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        # Service URLs từ settings
-        self.risk_service_url = getattr(settings, 'RISK_SERVICE_URL', 'http://risk-management-service:8000')
-        self.wallet_service_url = getattr(settings, 'WALLET_SERVICE_URL', 'http://wallet-service:8000')
-        self.saga_service_url = getattr(settings, 'SAGA_SERVICE_URL', 'http://saga-orchestrator:8000')
+        # Service URLs từ cấu hình tập trung
+        from shared.base_settings import get_service_url
+        self.risk_service_url = get_service_url('risk')
+        self.wallet_service_url = get_service_url('wallet')
+        self.saga_service_url = get_service_url('saga')
     
     def calculate_cash_out_value(self, bet_slip, live_odds_data, bookmaker_type='SYSTEM', bookmaker_id='system', event_margin=None):
         """
@@ -2135,8 +2137,9 @@ class MatchCancellationService:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.payment_service_url = os.getenv('PAYMENT_SERVICE_URL', 'http://localhost:8003')
-        self.saga_service_url = os.getenv('SAGA_SERVICE_URL', 'http://localhost:8004')
+        from shared.base_settings import get_service_url
+        self.payment_service_url = get_service_url('payment')
+        self.saga_service_url = get_service_url('saga')
     
     def handle_match_cancellation(self, match_id, cancellation_type, reason=""):
         """
@@ -2541,9 +2544,10 @@ class AutoCashoutMonitorService:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.betting_service_url = os.getenv('BETTING_SERVICE_URL', 'http://localhost:8001')
-        self.risk_service_url = os.getenv('RISK_MANAGEMENT_SERVICE_URL', 'http://localhost:8002')
-        self.saga_service_url = os.getenv('SAGA_SERVICE_URL', 'http://localhost:8004')
+        from shared.base_settings import get_service_url
+        self.betting_service_url = get_service_url('betting')
+        self.risk_service_url = get_service_url('risk')
+        self.saga_service_url = get_service_url('saga')
         self.cashout_service = CashOutService()
         
         # Cấu hình monitoring
@@ -2884,7 +2888,8 @@ class RiskCheckService:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.risk_service_url = getattr(settings, 'RISK_SERVICE_URL', 'http://risk-management-service:8000')
+        from shared.base_settings import get_service_url
+        self.risk_service_url = get_service_url('risk')
     
     def check_bet_risk(self, bet_data: Dict) -> Dict:
         """Kiểm tra rủi ro của một bet thông qua Risk Management Service"""

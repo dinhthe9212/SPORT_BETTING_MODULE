@@ -226,7 +226,10 @@ LOGGING = {
 }
 
 # Microservices URLs Configuration
+# Tất cả service URLs được quản lý tập trung tại đây
+# Sử dụng biến môi trường để linh hoạt trong các môi trường khác nhau
 MICROSERVICES = {
+    # Core Services
     'auth': config('AUTH_SERVICE_URL', default='http://auth_service:8001'),
     'betting': config('BETTING_SERVICE_URL', default='http://betting_service:8002'),
     'risk': config('RISK_SERVICE_URL', default='http://risk_management_service:8003'),
@@ -235,10 +238,42 @@ MICROSERVICES = {
     'carousel': config('CAROUSEL_SERVICE_URL', default='http://carousel_service:8006'),
     'individual_bookmaker': config('INDIVIDUAL_BOOKMAKER_SERVICE_URL', default='http://individual_bookmaker_service:8007'),
     'saga': config('SAGA_SERVICE_URL', default='http://saga_orchestrator:8008'),
+    
+    # Additional Services
     'promotions': config('PROMOTIONS_SERVICE_URL', default='http://promotions_service:8009'),
     'groups': config('GROUPS_SERVICE_URL', default='http://groups_service:8010'),
     'payment': config('PAYMENT_SERVICE_URL', default='http://payment_service:8011'),
+    'notification': config('NOTIFICATION_SERVICE_URL', default='http://notification_service:8012'),
 }
+
+# Helper functions để lấy service URLs
+def get_service_url(service_name: str) -> str:
+    """
+    Lấy URL của service theo tên
+    
+    Args:
+        service_name: Tên service (auth, betting, risk, etc.)
+    
+    Returns:
+        URL của service
+        
+    Raises:
+        KeyError: Nếu service không tồn tại
+    """
+    if service_name not in MICROSERVICES:
+        available_services = ', '.join(MICROSERVICES.keys())
+        raise KeyError(f"Service '{service_name}' not found. Available services: {available_services}")
+    
+    return MICROSERVICES[service_name]
+
+def get_all_service_urls() -> dict:
+    """
+    Lấy tất cả service URLs
+    
+    Returns:
+        Dictionary chứa tất cả service URLs
+    """
+    return MICROSERVICES.copy()
 
 # Create logs directory if it doesn't exist
 LOGS_DIR = BASE_DIR / 'logs'

@@ -581,12 +581,14 @@ class BettingRiskConfigurationService:
         self.sports_data_service_url = self._get_sports_data_service_url()
     
     def _get_betting_service_url(self) -> str:
-        """Lấy URL của betting service"""
-        return "http://localhost:8002"  # Default, should be from config
+        """Lấy URL của betting service từ cấu hình"""
+        from shared.base_settings import get_service_url
+        return get_service_url('betting')
     
     def _get_sports_data_service_url(self) -> str:
-        """Lấy URL của sports data service"""
-        return "http://localhost:8005"  # Default, should be from config
+        """Lấy URL của sports data service từ cấu hình"""
+        from shared.base_settings import get_service_url
+        return get_service_url('sports')
     
     def initialize_sport_risk_configurations(self) -> Dict[str, Any]:
         """Khởi tạo risk configuration cho tất cả 50+ sports"""
@@ -1698,7 +1700,7 @@ class RiskCheckService:
                 # Fallback: Gọi API từ Sports Data Service
                 try:
                     response = requests.get(
-                        f"{getattr(settings, 'SPORTS_DATA_SERVICE_URL', 'http://sports-data-service:8000')}/api/matches/{match_id}/",
+                        f"{self.sports_data_service_url}/api/matches/{match_id}/",
                         timeout=5
                     )
                     if response.status_code == 200:
@@ -1776,7 +1778,7 @@ class RiskCheckService:
                 # Nếu không có cache, gọi API từ Betting Service
                 try:
                     response = requests.get(
-                        f"{getattr(settings, 'BETTING_SERVICE_URL', 'http://betting-service:8000')}/api/liability/{match_id}/{bet_type_id}/{outcome}/",
+                        f"{self.betting_service_url}/api/liability/{match_id}/{bet_type_id}/{outcome}/",
                         timeout=5
                     )
                     if response.status_code == 200:
@@ -1845,7 +1847,7 @@ class RiskCheckService:
                 # Nếu không có cache, gọi API từ Betting Service
                 try:
                     response = requests.get(
-                        f"{getattr(settings, 'BETTING_SERVICE_URL', 'http://betting-service:8000')}/api/users/{user_id}/daily-stake/",
+                        f"{self.betting_service_url}/api/users/{user_id}/daily-stake/",
                         params={'date': today_start.date().isoformat()},
                         timeout=5
                     )

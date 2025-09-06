@@ -652,7 +652,7 @@ class AdvancedCircuitBreaker:
                     params['bet_types'] = ','.join(bet_types)
                 
                 response = requests.get(
-                    f"{getattr(settings, 'BETTING_SERVICE_URL', 'http://betting-service:8000')}/api/analytics/betting-volume/",
+                    f"{getattr(settings, 'BETTING_SERVICE_URL', 'http://betting_service:8002')}/api/analytics/betting-volume/",
                     params=params,
                     timeout=10
                 )

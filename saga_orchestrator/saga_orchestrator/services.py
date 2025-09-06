@@ -11,9 +11,10 @@ class MatchCancellationSagaService:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.betting_service_url = os.getenv('BETTING_SERVICE_URL', 'http://localhost:8001')
-        self.payment_service_url = os.getenv('PAYMENT_SERVICE_URL', 'http://localhost:8003')
-        self.notification_service_url = os.getenv('NOTIFICATION_SERVICE_URL', 'http://localhost:8005')
+        from shared.base_settings import get_service_url
+        self.betting_service_url = get_service_url('betting')
+        self.payment_service_url = get_service_url('payment')
+        self.notification_service_url = get_service_url('notification')
     
     def execute_match_cancellation_saga(self, match_id, cancellation_type, reason=""):
         """

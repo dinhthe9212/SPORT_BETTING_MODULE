@@ -132,6 +132,7 @@ REDIS_DB_SPORTS_DATA=5
 ### Service URLs
 ```bash
 # Internal Service URLs (Docker network)
+# Core Services
 AUTH_SERVICE_URL=http://auth_service:8001
 BETTING_SERVICE_URL=http://betting_service:8002
 RISK_SERVICE_URL=http://risk_management_service:8003
@@ -140,6 +141,30 @@ SPORTS_SERVICE_URL=http://sports_data_service:8005
 CAROUSEL_SERVICE_URL=http://carousel_service:8006
 INDIVIDUAL_BOOKMAKER_SERVICE_URL=http://individual_bookmaker_service:8007
 SAGA_SERVICE_URL=http://saga_orchestrator:8008
+
+# Additional Services
+PROMOTIONS_SERVICE_URL=http://promotions_service:8009
+GROUPS_SERVICE_URL=http://groups_service:8010
+PAYMENT_SERVICE_URL=http://payment_service:8011
+NOTIFICATION_SERVICE_URL=http://notification_service:8012
+```
+
+**🔧 Cách sử dụng Service URLs trong Code:**
+
+Thay vì hard-code URLs, hãy sử dụng cấu hình tập trung:
+
+```python
+# ❌ KHÔNG NÊN - Hard-code URLs
+betting_url = "http://localhost:8002"
+
+# ✅ NÊN DÙNG - Sử dụng cấu hình tập trung
+from shared.base_settings import get_service_url
+betting_url = get_service_url('betting')
+
+# Hoặc lấy tất cả URLs
+from shared.base_settings import get_all_service_urls
+all_urls = get_all_service_urls()
+betting_url = all_urls['betting']
 ```
 
 ### Kafka Configuration
