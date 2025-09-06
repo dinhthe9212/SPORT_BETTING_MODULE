@@ -1,0 +1,34 @@
+# Production Requirements for Carousel Service
+# Cost: $0 (All free packages)
+
+# Core Django
+Django==4.2.1
+djangorestframework==3.14.0
+
+# Database & Caching
+psycopg2-binary==2.9.6
+django-redis==5.2.0
+redis==4.6.0
+
+# Performance & Production
+gunicorn==20.1.0
+gevent==24.2.1
+whitenoise==6.5.0
+
+# WebSocket & Real-time
+channels==4.3.1
+channels-redis==4.3.0
+
+# Monitoring & Observability
+psutil==7.0.0
+
+# Security
+django-cors-headers==4.0.0
+django-filter==23.3
+
+# Utilities
+python-decouple==3.8
+Pillow==10.0.0
+
+# Development tools (only if needed)
+# django-extensions==3.2.3

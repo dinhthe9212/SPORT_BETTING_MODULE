@@ -1,0 +1,416 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: sport_betting_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - sport_betting_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: sport_betting_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - sport_betting_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kafka (for event streaming)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: sport_betting_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - sport_betting_network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: sport_betting_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT}
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_INTERNAL://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092,PLAINTEXT_INTERNAL://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+    networks:
+      - sport_betting_network
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Migration Service (chạy trước tất cả services)
+  migration_service:
+    build:
+      context: .
+      dockerfile: migration_service/Dockerfile
+    container_name: sport_betting_migration_service
+    environment:
+      - DB_NAME=${BETTING_DB_NAME}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${POSTGRES_HOST}
+      - DB_PORT=${POSTGRES_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB_BETTING}
+      - BETTING_DB_NAME=${BETTING_DB_NAME}
+      - CAROUSEL_DB_NAME=${CAROUSEL_DB_NAME}
+      - INDIVIDUAL_BOOKMAKER_DB_NAME=${INDIVIDUAL_BOOKMAKER_DB_NAME}
+      - RISK_MANAGEMENT_DB_NAME=${RISK_MANAGEMENT_DB_NAME}
+      - SAGA_DB_NAME=${SAGA_DB_NAME}
+      - SPORTS_DATA_DB_NAME=${SPORTS_DATA_DB_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sport_betting_network
+    volumes:
+      - ./shared:/app/shared
+      - ./betting_service:/app/betting_service
+      - ./carousel_service:/app/carousel_service
+      - ./individual_bookmaker_service:/app/individual_bookmaker_service
+      - ./risk_management_service:/app/risk_management_service
+      - ./saga_orchestrator:/app/saga_orchestrator
+      - ./sports_data_service:/app/sports_data_service
+    restart: "no"
+
+  # Betting Service
+  betting_service:
+    image: test-betting-service:latest
+    container_name: sport_betting_betting_service
+    ports:
+      - "8002:8002"
+    environment:
+      - SERVICE_NAME=betting_service
+      - DB_NAME=${BETTING_DB_NAME}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${POSTGRES_HOST}
+      - DB_PORT=${POSTGRES_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB_BETTING}
+      - RISK_SERVICE_URL=${RISK_SERVICE_URL}
+      - WALLET_SERVICE_URL=${WALLET_SERVICE_URL}
+      - SAGA_SERVICE_URL=${SAGA_SERVICE_URL}
+      - SPORTS_SERVICE_URL=${SPORTS_SERVICE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - BETTING_API_KEY=${BETTING_API_KEY}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW}
+      - MAX_BET_AMOUNT=${MAX_BET_AMOUNT}
+      - MIN_BET_AMOUNT=${MIN_BET_AMOUNT}
+      - MAX_ODDS=${MAX_ODDS}
+      - MIN_ODDS=${MIN_ODDS}
+      - AUTO_ORDER_ENABLED=${AUTO_ORDER_ENABLED}
+      - AUTO_ORDER_TIMEOUT=${AUTO_ORDER_TIMEOUT}
+      - CASHOUT_ENABLED=${CASHOUT_ENABLED}
+      - CASHOUT_MIN_AMOUNT=${CASHOUT_MIN_AMOUNT}
+      - CASHOUT_MAX_AMOUNT=${CASHOUT_MAX_AMOUNT}
+    depends_on:
+      migration_service:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sport_betting_network
+    volumes:
+      - ./shared:/app/shared
+      - ./betting_service:/app
+      - ./scripts/entrypoint.sh:/app/entrypoint.sh
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8002"]
+
+  # Carousel Service
+  carousel_service:
+    image: test-carousel-service:latest
+    container_name: sport_betting_carousel_service
+    ports:
+      - "8006:8006"
+    environment:
+      - SERVICE_NAME=carousel_service
+      - DB_NAME=${CAROUSEL_DB_NAME}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${POSTGRES_HOST}
+      - DB_PORT=${POSTGRES_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB_CAROUSEL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - CAROUSEL_API_KEY=${CAROUSEL_API_KEY}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW}
+    depends_on:
+      migration_service:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sport_betting_network
+    volumes:
+      - ./shared:/app/shared
+      - ./carousel_service:/app
+      - ./scripts/entrypoint.sh:/app/entrypoint.sh
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8006"]
+
+  # Individual Bookmaker Service
+  individual_bookmaker_service:
+    image: individual-bookmaker-service:latest
+    container_name: sport_betting_individual_bookmaker_service
+    ports:
+      - "8007:8007"
+    environment:
+      - SERVICE_NAME=individual_bookmaker_service
+      - DB_NAME=${INDIVIDUAL_BOOKMAKER_DB_NAME}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${POSTGRES_HOST}
+      - DB_PORT=${POSTGRES_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB_INDIVIDUAL_BOOKMAKER}
+      - BETTING_SERVICE_URL=${BETTING_SERVICE_URL}
+      - RISK_SERVICE_URL=${RISK_SERVICE_URL}
+      - WALLET_SERVICE_URL=${WALLET_SERVICE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - INDIVIDUAL_BOOKMAKER_API_KEY=${INDIVIDUAL_BOOKMAKER_API_KEY}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW}
+    depends_on:
+      migration_service:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sport_betting_network
+    volumes:
+      - ./shared:/app/shared
+      - ./individual_bookmaker_service:/app
+      - ./scripts/entrypoint.sh:/app/entrypoint.sh
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8007"]
+
+  # Risk Management Service
+  risk_management_service:
+    image: risk-management-service:latest
+    container_name: sport_betting_risk_management_service
+    ports:
+      - "8003:8003"
+    environment:
+      - SERVICE_NAME=risk_management_service
+      - DB_NAME=${RISK_MANAGEMENT_DB_NAME}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${POSTGRES_HOST}
+      - DB_PORT=${POSTGRES_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB_RISK_MANAGEMENT}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - RISK_MANAGEMENT_API_KEY=${RISK_MANAGEMENT_API_KEY}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW}
+      - CIRCUIT_BREAKER_FAILURE_THRESHOLD=${CIRCUIT_BREAKER_FAILURE_THRESHOLD}
+      - CIRCUIT_BREAKER_RECOVERY_TIMEOUT=${CIRCUIT_BREAKER_RECOVERY_TIMEOUT}
+    depends_on:
+      migration_service:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sport_betting_network
+    volumes:
+      - ./shared:/app/shared
+      - ./risk_management_service:/app
+      - ./scripts/entrypoint.sh:/app/entrypoint.sh
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8003"]
+
+  # Saga Orchestrator
+  saga_orchestrator:
+    image: saga-orchestrator:latest
+    container_name: sport_betting_saga_orchestrator
+    ports:
+      - "8008:8008"
+    environment:
+      - SERVICE_NAME=saga_orchestrator
+      - DB_NAME=${SAGA_DB_NAME}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${POSTGRES_HOST}
+      - DB_PORT=${POSTGRES_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB_SAGA}
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - SAGA_API_KEY=${SAGA_API_KEY}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW}
+    depends_on:
+      migration_service:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - sport_betting_network
+    volumes:
+      - ./shared:/app/shared
+      - ./saga_orchestrator:/app
+      - ./scripts/entrypoint.sh:/app/entrypoint.sh
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8008"]
+
+  # Sports Data Service
+  sports_data_service:
+    image: sports-data-service:latest
+    container_name: sport_betting_sports_data_service
+    ports:
+      - "8005:8005"
+    environment:
+      - SERVICE_NAME=sports_data_service
+      - DB_NAME=${SPORTS_DATA_DB_NAME}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${POSTGRES_HOST}
+      - DB_PORT=${POSTGRES_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB_SPORTS_DATA}
+      - API_SPORTS_KEY=${API_SPORTS_KEY}
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
+      - OPENLIGADB_KEY=${OPENLIGADB_KEY}
+      - THESPORTSDB_KEY=${THESPORTSDB_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - SPORTS_API_KEY=${SPORTS_API_KEY}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - JWT_ACCESS_TOKEN_EXPIRY=${JWT_ACCESS_TOKEN_EXPIRY}
+      - JWT_REFRESH_TOKEN_EXPIRY=${JWT_REFRESH_TOKEN_EXPIRY}
+      - ALERT_EMAIL_HOST=${ALERT_EMAIL_HOST}
+      - ALERT_EMAIL_PORT=${ALERT_EMAIL_PORT}
+      - ALERT_EMAIL_USER=${ALERT_EMAIL_USER}
+      - ALERT_EMAIL_PASSWORD=${ALERT_EMAIL_PASSWORD}
+      - ALERT_SLACK_WEBHOOK_URL=${ALERT_SLACK_WEBHOOK_URL}
+      - CIRCUIT_BREAKER_FAILURE_THRESHOLD=${CIRCUIT_BREAKER_FAILURE_THRESHOLD}
+      - CIRCUIT_BREAKER_RECOVERY_TIMEOUT=${CIRCUIT_BREAKER_RECOVERY_TIMEOUT}
+      - CACHE_LIVE_SCORES_TTL=${CACHE_LIVE_SCORES_TTL}
+      - CACHE_FIXTURES_TTL=${CACHE_FIXTURES_TTL}
+      - CACHE_ODDS_DATA_TTL=${CACHE_ODDS_DATA_TTL}
+      - CACHE_PROVIDER_METRICS_TTL=${CACHE_PROVIDER_METRICS_TTL}
+      - ALERT_DATA_SYNC_COOLDOWN=${ALERT_DATA_SYNC_COOLDOWN}
+      - ALERT_DATA_SYNC_MAX_PER_HOUR=${ALERT_DATA_SYNC_MAX_PER_HOUR}
+      - ALERT_PROVIDER_DOWN_COOLDOWN=${ALERT_PROVIDER_DOWN_COOLDOWN}
+      - ALERT_PROVIDER_DOWN_MAX_PER_HOUR=${ALERT_PROVIDER_DOWN_MAX_PER_HOUR}
+    depends_on:
+      migration_service:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sport_betting_network
+    volumes:
+      - ./shared:/app/shared
+      - ./sports_data_service:/app
+      - ./scripts/entrypoint.sh:/app/entrypoint.sh
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8005"]
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: sport_betting_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - betting_service
+      - carousel_service
+      - individual_bookmaker_service
+      - risk_management_service
+      - saga_orchestrator
+      - sports_data_service
+    networks:
+      - sport_betting_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  sport_betting_network:
+    driver: bridge

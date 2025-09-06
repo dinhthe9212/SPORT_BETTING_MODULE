@@ -1,0 +1,10 @@
+# Redis Caching Dependencies - FREE & OPEN SOURCE
+redis==5.0.1
+django-redis==5.4.0
+hiredis==2.2.3  # C extension for better performance
+
+# Optional: Redis monitoring tools (all free)
+# redis-cli is a command-line tool, not a Python package
+
+# Installation command:
+# pip install -r requirements_cache.txt

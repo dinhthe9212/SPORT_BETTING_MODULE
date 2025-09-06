@@ -1,0 +1,232 @@
+# Generated manually for Leaderboard & Statistics models
+
+from django.db import migrations, models
+import django.db.models.deletion
+from django.conf import settings
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('betting', '0003_cash_out_implementation'),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='UserStatistics',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('period', models.CharField(choices=[('DAILY', 'Daily (Hàng ngày)'), ('WEEKLY', 'Weekly (Hàng tuần)'), ('MONTHLY', 'Monthly (Hàng tháng)'), ('YEARLY', 'Yearly (Hàng năm)'), ('ALL_TIME', 'All Time (Tất cả thời gian)')], default='ALL_TIME', max_length=20)),
+                ('period_start', models.DateTimeField(help_text='Thời điểm bắt đầu kỳ thống kê')),
+                ('period_end', models.DateTimeField(help_text='Thời điểm kết thúc kỳ thống kê')),
+                ('total_bets', models.IntegerField(default=0, help_text='Tổng số phiếu cược')),
+                ('total_wins', models.IntegerField(default=0, help_text='Tổng số phiếu thắng')),
+                ('total_losses', models.IntegerField(default=0, help_text='Tổng số phiếu thua')),
+                ('total_draws', models.IntegerField(default=0, help_text='Tổng số phiếu hòa')),
+                ('total_stake', models.DecimalField(decimal_places=2, default=0, help_text='Tổng số tiền cược', max_digits=15)),
+                ('total_return', models.DecimalField(decimal_places=2, default=0, help_text='Tổng số tiền nhận về', max_digits=15)),
+                ('total_profit', models.DecimalField(decimal_places=2, default=0, help_text='Tổng lãi/lỗ', max_digits=15)),
+                ('total_fees', models.DecimalField(decimal_places=2, default=0, help_text='Tổng phí giao dịch', max_digits=15)),
+                ('win_rate', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ thắng (%)', max_digits=5)),
+                ('roi', models.DecimalField(decimal_places=4, default=0, help_text='Return on Investment (%)', max_digits=8)),
+                ('average_odds', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ cược trung bình', max_digits=5)),
+                ('average_bet_size', models.DecimalField(decimal_places=2, default=0, help_text='Số tiền cược trung bình', max_digits=10)),
+                ('best_win_streak', models.IntegerField(default=0, help_text='Chuỗi thắng dài nhất')),
+                ('current_win_streak', models.IntegerField(default=0, help_text='Chuỗi thắng hiện tại')),
+                ('best_loss_streak', models.IntegerField(default=0, help_text='Chuỗi thua dài nhất')),
+                ('current_loss_streak', models.IntegerField(default=0, help_text='Chuỗi thua hiện tại')),
+                ('single_bets', models.IntegerField(default=0, help_text='Số phiếu cược đơn')),
+                ('multiple_bets', models.IntegerField(default=0, help_text='Số phiếu cược kép')),
+                ('system_bets', models.IntegerField(default=0, help_text='Số phiếu cược hệ thống')),
+                ('football_bets', models.IntegerField(default=0, help_text='Số phiếu cược bóng đá')),
+                ('basketball_bets', models.IntegerField(default=0, help_text='Số phiếu cược bóng rổ')),
+                ('tennis_bets', models.IntegerField(default=0, help_text='Số phiếu cược tennis')),
+                ('other_sports_bets', models.IntegerField(default=0, help_text='Số phiếu cược môn khác')),
+                ('last_updated', models.DateTimeField(auto_now=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='statistics', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'verbose_name': 'User Statistics',
+                'verbose_name_plural': 'User Statistics',
+                'db_table': 'user_statistics',
+                'ordering': ['-period_start', '-total_profit'],
+            },
+        ),
+        migrations.CreateModel(
+            name='Leaderboard',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('period', models.CharField(choices=[('DAILY', 'Daily (Hàng ngày)'), ('WEEKLY', 'Weekly (Hàng tuần)'), ('MONTHLY', 'Monthly (Hàng tháng)'), ('YEARLY', 'Yearly (Hàng năm)'), ('ALL_TIME', 'All Time (Tất cả thời gian)')], default='WEEKLY', max_length=20)),
+                ('category', models.CharField(choices=[('OVERALL', 'Overall (Tổng thể)'), ('PROFIT', 'Profit (Lãi cao nhất)'), ('WIN_RATE', 'Win Rate (Tỷ lệ thắng cao nhất)'), ('VOLUME', 'Volume (Khối lượng cược cao nhất)'), ('STREAK', 'Streak (Chuỗi thắng dài nhất)'), ('ROI', 'ROI (Return on Investment cao nhất)')], default='OVERALL', max_length=20)),
+                ('period_start', models.DateTimeField(help_text='Thời điểm bắt đầu kỳ xếp hạng')),
+                ('period_end', models.DateTimeField(help_text='Thời điểm kết thúc kỳ xếp hạng')),
+                ('rank', models.IntegerField(help_text='Thứ hạng trong bảng xếp hạng')),
+                ('points', models.IntegerField(default=0, help_text='Điểm số để xếp hạng')),
+                ('total_profit', models.DecimalField(decimal_places=2, default=0, help_text='Tổng lãi/lỗ', max_digits=15)),
+                ('win_rate', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ thắng (%)', max_digits=5)),
+                ('total_bets', models.IntegerField(default=0, help_text='Tổng số phiếu cược')),
+                ('total_stake', models.DecimalField(decimal_places=2, default=0, help_text='Tổng số tiền cược', max_digits=15)),
+                ('win_streak', models.IntegerField(default=0, help_text='Chuỗi thắng hiện tại')),
+                ('roi', models.DecimalField(decimal_places=4, default=0, help_text='Return on Investment (%)', max_digits=8)),
+                ('is_featured', models.BooleanField(default=False, help_text='Có được highlight không')),
+                ('featured_reason', models.TextField(blank=True, help_text='Lý do được highlight', null=True)),
+                ('last_updated', models.DateTimeField(auto_now=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='leaderboard_entries', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'verbose_name': 'Leaderboard Entry',
+                'verbose_name_plural': 'Leaderboard Entries',
+                'db_table': 'leaderboards',
+                'ordering': ['period', 'category', 'rank'],
+            },
+        ),
+        migrations.CreateModel(
+            name='BettingStatistics',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('period', models.CharField(choices=[('DAILY', 'Daily (Hàng ngày)'), ('WEEKLY', 'Weekly (Hàng tuần)'), ('MONTHLY', 'Monthly (Hàng tháng)'), ('YEARLY', 'Yearly (Hàng năm)'), ('ALL_TIME', 'All Time (Tất cả thời gian)')], default='DAILY', max_length=20)),
+                ('period_start', models.DateTimeField(help_text='Thời điểm bắt đầu kỳ thống kê')),
+                ('period_end', models.DateTimeField(help_text='Thời điểm kết thúc kỳ thống kê')),
+                ('total_bets_placed', models.IntegerField(default=0, help_text='Tổng số phiếu cược')),
+                ('total_unique_users', models.IntegerField(default=0, help_text='Tổng số người dùng đặt cược')),
+                ('total_matches', models.IntegerField(default=0, help_text='Tổng số trận đấu có cược')),
+                ('total_stake_amount', models.DecimalField(decimal_places=2, default=0, help_text='Tổng số tiền cược', max_digits=20)),
+                ('total_return_amount', models.DecimalField(decimal_places=2, default=0, help_text='Tổng số tiền trả về', max_digits=20)),
+                ('total_profit', models.DecimalField(decimal_places=2, default=0, help_text='Tổng lãi/lỗ của nhà cái', max_digits=20)),
+                ('house_edge', models.DecimalField(decimal_places=2, default=0, help_text='Biên lợi nhuận của nhà cái (%)', max_digits=5)),
+                ('single_bets_count', models.IntegerField(default=0, help_text='Số phiếu cược đơn')),
+                ('multiple_bets_count', models.IntegerField(default=0, help_text='Số phiếu cược kép')),
+                ('system_bets_count', models.IntegerField(default=0, help_text='Số phiếu cược hệ thống')),
+                ('football_bets', models.IntegerField(default=0, help_text='Số phiếu cược bóng đá')),
+                ('basketball_bets', models.IntegerField(default=0, help_text='Số phiếu cược bóng rổ')),
+                ('tennis_bets', models.IntegerField(default=0, help_text='Số phiếu cược tennis')),
+                ('other_sports_bets', models.IntegerField(default=0, help_text='Số phiếu cược môn khác')),
+                ('free_stake_bets', models.IntegerField(default=0, help_text='Số phiếu cược Free Stake')),
+                ('fixed_stake_bets', models.IntegerField(default=0, help_text='Số phiếu cược Fixed Stake')),
+                ('total_cashout_requests', models.IntegerField(default=0, help_text='Tổng số yêu cầu Cash Out')),
+                ('total_cashout_amount', models.DecimalField(decimal_places=2, default=0, help_text='Tổng số tiền Cash Out', max_digits=20)),
+                ('cashout_success_rate', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ thành công Cash Out (%)', max_digits=5)),
+                ('average_bet_size', models.DecimalField(decimal_places=2, default=0, help_text='Số tiền cược trung bình', max_digits=10)),
+                ('average_odds', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ cược trung bình', max_digits=5)),
+                ('win_rate', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ thắng chung (%)', max_digits=5)),
+                ('last_updated', models.DateTimeField(auto_now=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+            ],
+            options={
+                'verbose_name': 'Betting Statistics',
+                'verbose_name_plural': 'Betting Statistics',
+                'db_table': 'betting_statistics',
+                'ordering': ['-period_start', '-period'],
+            },
+        ),
+        migrations.CreateModel(
+            name='PerformanceMetrics',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('total_bets', models.IntegerField(default=0, help_text='Tổng số phiếu cược')),
+                ('total_wins', models.IntegerField(default=0, help_text='Tổng số phiếu thắng')),
+                ('total_losses', models.IntegerField(default=0, help_text='Tổng số phiếu thua')),
+                ('success_rate', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ thành công (%)', max_digits=5)),
+                ('win_rate', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ thắng (%)', max_digits=5)),
+                ('total_stake', models.DecimalField(decimal_places=2, default=0, help_text='Tổng số tiền cược', max_digits=15)),
+                ('total_return', models.DecimalField(decimal_places=2, default=0, help_text='Tổng số tiền nhận về', max_digits=15)),
+                ('profit_loss', models.DecimalField(decimal_places=2, default=0, help_text='Lãi/lỗ', max_digits=15)),
+                ('roi', models.DecimalField(decimal_places=4, default=0, help_text='Return on Investment (%)', max_digits=8)),
+                ('average_odds', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ cược trung bình', max_digits=5)),
+                ('best_odds', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ cược tốt nhất', max_digits=5)),
+                ('worst_odds', models.DecimalField(decimal_places=2, default=0, help_text='Tỷ lệ cược tệ nhất', max_digits=5)),
+                ('first_bet_date', models.DateTimeField(blank=True, help_text='Ngày đặt cược đầu tiên', null=True)),
+                ('last_bet_date', models.DateTimeField(blank=True, help_text='Ngày đặt cược cuối cùng', null=True)),
+                ('last_updated', models.DateTimeField(auto_now=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='performance_metrics', to=settings.AUTH_USER_MODEL)),
+                ('sport', models.ForeignKey(blank=True, help_text='Môn thể thao (null = tất cả)', null=True, on_delete=django.db.models.deletion.CASCADE, to='betting.sport')),
+                ('bet_type', models.ForeignKey(blank=True, help_text='Loại cược (null = tất cả)', null=True, on_delete=django.db.models.deletion.CASCADE, to='betting.bettype')),
+            ],
+            options={
+                'verbose_name': 'Performance Metric',
+                'verbose_name_plural': 'Performance Metrics',
+                'db_table': 'performance_metrics',
+                'ordering': ['-success_rate', '-roi'],
+            },
+        ),
+        migrations.AddIndex(
+            model_name='userstatistics',
+            index=models.Index(fields=['user', 'period'], name='user_statistics_user_id_period_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='userstatistics',
+            index=models.Index(fields=['period', 'total_profit'], name='user_statistics_period_total_profit_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='userstatistics',
+            index=models.Index(fields=['user', 'win_rate'], name='user_statistics_user_id_win_rate_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='userstatistics',
+            index=models.Index(fields=['period_start', 'period_end'], name='user_statistics_period_start_period_end_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='leaderboard',
+            index=models.Index(fields=['period', 'category', 'rank'], name='leaderboards_period_category_rank_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='leaderboard',
+            index=models.Index(fields=['user', 'period'], name='leaderboards_user_id_period_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='leaderboard',
+            index=models.Index(fields=['period_start', 'period_end'], name='leaderboards_period_start_period_end_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='leaderboard',
+            index=models.Index(fields=['points'], name='leaderboards_points_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='bettingstatistics',
+            index=models.Index(fields=['period', 'period_start'], name='betting_statistics_period_period_start_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='bettingstatistics',
+            index=models.Index(fields=['total_bets_placed'], name='betting_statistics_total_bets_placed_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='bettingstatistics',
+            index=models.Index(fields=['total_stake_amount'], name='betting_statistics_total_stake_amount_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='performancemetrics',
+            index=models.Index(fields=['user', 'sport'], name='performance_metrics_user_id_sport_id_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='performancemetrics',
+            index=models.Index(fields=['user', 'bet_type'], name='performance_metrics_user_id_bet_type_id_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='performancemetrics',
+            index=models.Index(fields=['success_rate'], name='performance_metrics_success_rate_idx'),
+        ),
+        migrations.AddIndex(
+            model_name='performancemetrics',
+            index=models.Index(fields=['roi'], name='performance_metrics_roi_idx'),
+        ),
+        migrations.AlterUniqueTogether(
+            name='userstatistics',
+            unique_together={('user', 'period', 'period_start')},
+        ),
+        migrations.AlterUniqueTogether(
+            name='leaderboard',
+            unique_together={('period', 'category', 'user', 'period_start')},
+        ),
+        migrations.AlterUniqueTogether(
+            name='bettingstatistics',
+            unique_together={('period', 'period_start')},
+        ),
+        migrations.AlterUniqueTogether(
+            name='performancemetrics',
+            unique_together={('user', 'sport', 'bet_type')},
+        ),
+    ]

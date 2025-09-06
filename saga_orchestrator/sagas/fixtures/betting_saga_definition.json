@@ -1,0 +1,91 @@
+[
+  {
+    "model": "sagas.sagadefinition",
+    "pk": 1,
+    "fields": {
+      "name": "Bet Placement Saga",
+      "saga_type": "betting_flow",
+      "description": "Saga workflow cho việc đặt cược, bao gồm validation, trừ tiền wallet, và xác nhận bet",
+      "workflow_definition": {
+        "steps": [
+          {
+            "name": "validate_bet",
+            "type": "validation",
+            "service": "betting_service",
+            "endpoint": "/api/bets/validate/",
+            "method": "POST",
+            "request_template": {
+              "bet_slip_id": "{{bet_slip_id}}",
+              "user_id": "{{user_id}}",
+              "total_stake": "{{total_stake}}"
+            },
+            "max_retries": 2
+          },
+          {
+            "name": "deduct_funds",
+            "type": "service_call",
+            "service": "wallet_service",
+            "endpoint": "/api/wallet/debit/",
+            "method": "POST",
+            "request_template": {
+              "user_id": "{{user_id}}",
+              "amount": "{{total_stake}}",
+              "transaction_type": "BET",
+              "reference_id": "{{bet_slip_id}}",
+              "description": "Bet placement for BetSlip #{{bet_slip_id}}"
+            },
+            "compensation": {
+              "service": "wallet_service",
+              "endpoint": "/api/wallet/credit/",
+              "method": "POST",
+              "data": {
+                "user_id": "{{user_id}}",
+                "amount": "{{total_stake}}",
+                "transaction_type": "REFUND",
+                "reference_id": "{{bet_slip_id}}",
+                "description": "Refund for cancelled bet #{{bet_slip_id}}"
+              }
+            },
+            "max_retries": 3
+          },
+          {
+            "name": "confirm_bet",
+            "type": "service_call",
+            "service": "betting_service",
+            "endpoint": "/api/bets/confirm/",
+            "method": "POST",
+            "request_template": {
+              "bet_slip_id": "{{bet_slip_id}}",
+              "wallet_transaction_id": "{{wallet_transaction_id}}"
+            },
+            "max_retries": 2
+          },
+          {
+            "name": "notify_user",
+            "type": "notification",
+            "service": "notification_service",
+            "endpoint": "/api/notifications/send/",
+            "method": "POST",
+            "request_template": {
+              "user_id": "{{user_id}}",
+              "notification_type": "BET_CONFIRMED",
+              "title": "Bet Confirmed",
+              "message": "Your bet has been confirmed successfully",
+              "data": {
+                "bet_slip_id": "{{bet_slip_id}}",
+                "total_stake": "{{total_stake}}",
+                "potential_payout": "{{potential_payout}}"
+              }
+            },
+            "max_retries": 1
+          }
+        ]
+      },
+      "timeout_seconds": 60,
+      "max_retries": 3,
+      "retry_delay_seconds": 5,
+      "is_active": true,
+      "version": "1.0"
+    }
+  }
+]
